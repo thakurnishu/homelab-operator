@@ -1,0 +1,125 @@
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.17.1
+  name: minimaldoes.application.homelab.nishantlabs.cloud
+spec:
+  group: application.homelab.nishantlabs.cloud
+  names:
+    kind: MinimalDo
+    listKind: MinimalDoList
+    plural: minimaldoes
+    singular: minimaldo
+  scope: Namespaced
+  versions:
+  - name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: MinimalDo is the Schema for the minimaldoes API.
+        properties:
+          apiVersion:
+            description: |-
+              APIVersion defines the versioned schema of this representation of an object.
+              Servers should convert recognized schemas to the latest internal value, and
+              may reject unrecognized values.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
+            type: string
+          kind:
+            description: |-
+              Kind is a string value representing the REST resource this object represents.
+              Servers may infer this from the endpoint the client submits requests to.
+              Cannot be updated.
+              In CamelCase.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: MinimalDoSpec defines the desired state of MinimalDo.
+            properties:
+              application_domain:
+                type: string
+              backend:
+                properties:
+                  enable_console_log:
+                    type: boolean
+                  gin_mode:
+                    type: string
+                  image:
+                    type: string
+                  log_level:
+                    type: string
+                  replicas:
+                    format: int32
+                    type: integer
+                required:
+                - image
+                type: object
+              database:
+                properties:
+                  backup:
+                    properties:
+                      bootstrap_from_previous_backup:
+                        type: boolean
+                      gcpCredentials:
+                        properties:
+                          secret_name:
+                            type: string
+                        required:
+                        - secret_name
+                        type: object
+                      gcs_bucket:
+                        type: string
+                      schedule:
+                        type: string
+                    required:
+                    - gcpCredentials
+                    - gcs_bucket
+                    type: object
+                  instances:
+                    format: int32
+                    type: integer
+                  pg_cluster_version:
+                    format: int32
+                    type: integer
+                  postgres_version:
+                    type: string
+                  storage_size:
+                    type: string
+                required:
+                - instances
+                - pg_cluster_version
+                - postgres_version
+                - storage_size
+                type: object
+              frontend:
+                description: Foo is an example field of MinimalDo. Edit minimaldo_types.go
+                  to remove/update
+                properties:
+                  image:
+                    type: string
+                  replicas:
+                    format: int32
+                    type: integer
+                required:
+                - image
+                type: object
+              image_pull_secret_name:
+                type: string
+            required:
+            - application_domain
+            - backend
+            - database
+            - frontend
+            - image_pull_secret_name
+            type: object
+          status:
+            description: MinimalDoStatus defines the observed state of MinimalDo.
+            type: object
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}

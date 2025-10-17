@@ -1,0 +1,29 @@
+apiVersion: application.homelab.nishantlabs.cloud/v1alpha1
+kind: MinimalDo
+metadata:
+  labels:
+    app.kubernetes.io/name: homelab-operator
+    app.kubernetes.io/managed-by: kustomize
+  name: minimaldo
+  namespace: minimaldo
+spec:
+  image_pull_secret_name: thakurnishu-packages-read-secret
+  application_domain: minimaldo.nishantlabs.cloud
+
+  frontend:
+    image: ghcr.io/thakurnishu/minimaldo-frontend:main-3e1431e-1753116302
+    replicas: 1
+  backend:
+    image: ghcr.io/thakurnishu/minimaldo-backend:main-3e1431e-1753116318
+    replicas: 1
+  database:
+    pg_cluster_version: 0
+    instances: 1
+    storage_size: 5Gi
+    postgres_version: "17.5"
+    backup:
+      bootstrap_from_previous_backup: false
+      gcs_bucket: "homelab-backupz"
+      gcpCredentials:
+        secret_name: backup-creds
+#      schedule: "0 0 3 * * *"
