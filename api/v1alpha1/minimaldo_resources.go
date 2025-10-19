@@ -171,7 +171,7 @@ func createIngressObjects(minimaldo *MinimalDo) []client.Object {
 		"/":    fmt.Sprintf("%s-frontend-svc", minimaldo.Name),
 	}
 
-	var paths []networkingv1.HTTPIngressPath
+	paths := make([]networkingv1.HTTPIngressPath, 0, len(pathToSvc))
 	for path, service_name := range pathToSvc {
 		temp := networkingv1.HTTPIngressPath{
 			Path:     path,
@@ -258,7 +258,6 @@ func createBackendObjects(minimaldo *MinimalDo, permissions map[string]*int64) [
 	}
 	backendObjects = append(backendObjects, backendService)
 
-	var backendEnvs []corev1.EnvVar
 	backendDBSecretRef := map[string]string{
 		"DB_HOST":     "host",
 		"DB_PORT":     "port",
@@ -266,6 +265,17 @@ func createBackendObjects(minimaldo *MinimalDo, permissions map[string]*int64) [
 		"DB_PASSWORD": "password",
 		"DB_NAME":     "dbname",
 	}
+	backendValueEns := map[string]string{
+		"PORT":                             "8080",
+		"FRONTEND_URL":                     fmt.Sprintf("https://%s", minimaldo.Spec.ApplicaionDomain),
+		"APP_NAME":                         "MinimalDo",
+		"OTEL_EXPORTER_OTLP_ENDPOINT_GRPC": "otel-collector-opentelemetry-collector.open-telemetry.svc.cluster.local:4317",
+		"GIN_MODE":                         "release",
+		"ENABLE_CONSOLE_LOG":               "true",
+		"LOG_LEVEL":                        "debug",
+	}
+
+	backendEnvs := make([]corev1.EnvVar, 0, len(backendDBSecretRef)+len(backendValueEns))
 	for env_name, key_name := range backendDBSecretRef {
 		tempEnv := corev1.EnvVar{
 			Name: env_name,
@@ -281,15 +291,6 @@ func createBackendObjects(minimaldo *MinimalDo, permissions map[string]*int64) [
 		backendEnvs = append(backendEnvs, tempEnv)
 	}
 
-	backendValueEns := map[string]string{
-		"PORT":                             "8080",
-		"FRONTEND_URL":                     fmt.Sprintf("https://%s", minimaldo.Spec.ApplicaionDomain),
-		"APP_NAME":                         "MinimalDo",
-		"OTEL_EXPORTER_OTLP_ENDPOINT_GRPC": "otel-collector-opentelemetry-collector.open-telemetry.svc.cluster.local:4317",
-		"GIN_MODE":                         "release",
-		"ENABLE_CONSOLE_LOG":               "true",
-		"LOG_LEVEL":                        "debug",
-	}
 	for env_name, value := range backendValueEns {
 		tempEnv := corev1.EnvVar{
 			Name:  env_name,
