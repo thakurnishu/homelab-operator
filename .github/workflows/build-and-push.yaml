@@ -1,0 +1,51 @@
+name: Build Controller Image
+
+env:
+  REGISTRY: ghcr.io
+  REPOSITORY_OWNER: ${{ github.repository_owner }}
+  IMAGE_NAME: homelab-operator
+
+on:
+  workflow_dispatch:
+#  push:
+#    branches: [ main ]
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write  # This allows pushing to GHCR
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Set commit ID
+        id: commit
+        run: |
+          echo "short_sha=main-$(git rev-parse --short HEAD)-$(date +%s)" >> $GITHUB_OUTPUT
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build Docker image 
+        run: |
+          echo "Building ${{ matrix.component.name }} image for commit: ${{ steps.commit.outputs.short_sha }}"
+          
+          # Add tags and context
+          BUILD_CMD="docker build \
+            -t ${{ env.REGISTRY }}/${{ env.REPOSITORY_OWNER }}/${{ env.IMAGE_NAME }}:latest \
+            -t ${{ env.REGISTRY }}/${{ env.REPOSITORY_OWNER }}/${{ env.IMAGE_NAME }}:${{ steps.commit.outputs.short_sha }} ."
+          
+          echo "Executing: $BUILD_CMD"
+          eval $BUILD_CMD
+
+      - name: Push Docker image
+        run: |
+          echo "Pushing images for commit: ${{ steps.commit.outputs.short_sha }}"
+          docker push ${{ env.REGISTRY }}/${{ env.REPOSITORY_OWNER }}/${{ env.IMAGE_NAME }}:latest
+          docker push ${{ env.REGISTRY }}/${{ env.REPOSITORY_OWNER }}/${{ env.IMAGE_NAME }}:${{ steps.commit.outputs.short_sha }}
